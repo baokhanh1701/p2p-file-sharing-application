@@ -1,5 +1,9 @@
 import socket
 import threading
+import time
+import tkinter as tk
+
+pingSignal = threading.Event()
 
 listFileSample = [
   'test.txt',
@@ -10,7 +14,6 @@ listFileSample = [
 
 # buffer for printingLog in interface
 printingLogWaiting = []
-
 # save local list of every clients
 saveLocalClient = {} 
 
@@ -18,6 +21,8 @@ class Server:
   def __init__(self, host, port):
     self.host = host
     self.port = port
+    self.connections = {}
+     
 
   def clientHandle(self, clientSocket, clientAddress):
     while True:
@@ -28,7 +33,7 @@ class Server:
           - publish lname fname: lname(link), fname(name of file)
           - fetch fname: fetch some copy from target file
         """
-        print('{} send to server: {}'.format(clientAddress, clientMessage))
+        # print('{} send to server: {}'.format(clientAddress, clientMessage))
         printingLogWaiting.append('{} send to server: {}'.format(clientAddress, clientMessage))
         ## fetch case
         if  (clientMessage.split(' ')[0] == 'fetch'):
@@ -43,21 +48,40 @@ class Server:
           print(saveLocalClient)
           printingLogWaiting.append('link: {}'.format(clientMessage.split(' ')[1]))
           printingLogWaiting.append('filename: {}'.format(clientMessage.split(' ')[2])) 
+        elif(clientMessage == 'PONG'):
+          time.sleep(0.5)
+          pingSignal.set()
       except:
         break   
+  
+  def ping(self, hostname, textArea):
+    try:
+      pingMessage = "PING"
+      startTime = time.time()
+      hostnameSocket = self.connections[int(hostname)]
+      hostnameSocket.send(pingMessage.encode())
+      
+      # Waiting for response
+      pingSignal.wait()
+      
+      endTime = time.time()
+      elapsedTime = endTime - startTime
+      # print("ping successfully, time: {}", elapsedTime)
+      textArea.insert(tk.END, "\n ping successfully, time: {:.5f}ms".format(elapsedTime*1000))
+    except Exception as err:
+      print("Got error: {}".format(err))
   
   def run(self):
     self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.serverSocket.bind((self.host, self.port))
     self.serverSocket.listen(5)
-    self.connections = []
     print('Server is running on {}/{}'.format(self.host, self.port))
     try:
       while True:
         self.serverSocket.settimeout(1)
         try:
           clientSocket, clientAddress  = self.serverSocket.accept()
-          self.connections.append(clientSocket)
+          self.connections[clientAddress[1]] = clientSocket
           clientSocket.send('{} is your address'.format(clientAddress).encode())
           print('{} is connected'.format(clientAddress))
           clientHandler = threading.Thread(target = self.clientHandle, args = (clientSocket, clientAddress))

@@ -1,11 +1,5 @@
 from utils.ServerClass import *
-import tkinter as tk
-import threading
 from tkinter import scrolledtext
-import time
-
-def execute_command(server, command):
-  pass
 
 
 # print (saveLocalClient)
@@ -27,16 +21,48 @@ class ServerGUI:
     self.textArea.insert(tk.END, "\n The server is running on {}/{}".format(host, port))
     
     # Button to execute command
-    executeButton = tk.Button(self.root, text = "Execute", command = lambda: execute_command(server, entry.get()))
+    executeButton = tk.Button(self.root, text = "Execute", command = lambda: self.execute_command(entry.get()))
     executeButton.pack(padx=10, pady = 5)
   
   def run(self):
     self.root.mainloop() 
     
+  def execute_command(self, command):
+    """
+      2 commands valid in server command shell interpreter
+      - discover hostname: discover the list of local files of the host named 'hostname'
+      - ping hostname: live check the 'hostname'
+    """
+    if(len(command.split(' ')) == 2):
+      opString = command.split(' ')[0]
+      if(opString == 'discover'):
+        clientAddress = command.split(' ')[1]
+        try: 
+          if(int(clientAddress) in saveLocalClient):
+            if(len(saveLocalClient[int(clientAddress)]) > 0):
+              self.textArea.insert(tk.END, "\nThe client {} has following files: ".format(clientAddress))
+              for localFile in saveLocalClient[int(clientAddress)]:
+                self.textArea.insert(tk.END, "\n - {}".format(localFile))
+            else:
+              self.textArea.insert(tk.END, "\n This client did not upload any files")
+          else:
+            self.textArea.insert(tk.END, "\n This hostname does not exist in server")
+        except KeyError:
+          self.textArea.insert(tk.END, "\n Your hostname is invalid")
+      elif(opString == 'ping'):
+        hostname = command.split(' ')[1]
+        pingThread = threading.Thread(target = server.ping, args = (hostname, self.textArea))
+        # pingStatus, responseTime = server.ping(hostname)
+        pingThread.start()
+      else:
+        self.textArea.insert(tk.END, "\n The command is invalid")  
+    else:
+      self.textArea.insert(tk.END, "\n The command is invalid")  
+    
+    
   def updateRealtime(self):
     while True:
       time.sleep(0.5)
-      print (printingLogWaiting, flush=True)
       if(len( printingLogWaiting ) != 0):
         for log in printingLogWaiting:
           self.textArea.insert(tk.END, "\n" + log)

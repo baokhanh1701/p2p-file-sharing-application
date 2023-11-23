@@ -2,7 +2,7 @@
 
 ## Table of contents
  - [Description](#description)
- - [Current works](#current)
+ - [Current Workload](#current)
  - [Technology](#technology)
  - [Installation](#installation)
  - [Contributing](#contributing)
@@ -14,7 +14,7 @@ The clients can save some files in their local repository and send repository fo
 
 The server can save the folder tree of clients and connect them directly when a client require to fetch a file from another one.
 
-## Current
+## Current Workload
 Ver 0.1.1: 
   - Build simple GUI for client and server with python GUI
   - Build class for client and server with multi-threading and can be executed along with GUI 

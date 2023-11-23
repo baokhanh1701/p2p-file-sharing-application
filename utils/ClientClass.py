@@ -14,8 +14,14 @@ class Client:
         try:
             while True:
                 receivedMessage = self.clientSocket.recv(1024).decode()
-                print(receivedMessage)
-                text_area.insert(tk.END, "\n" + receivedMessage)
+                if(receivedMessage != "PING"):
+                    text_area.insert(tk.END, "\n" + receivedMessage)
+                else:
+                    returnPingMessage = "PONG"
+                    try:
+                        self.clientSocket.send(returnPingMessage.encode())
+                    except ConnectionError:
+                        raise ConnectionError("Server is closed or unavailable")
         except ConnectionError as err:
             raise ConnectionError("Server is closed or unavailable")
             # sys.__excepthook__(type(err), err, err.__traceback__)

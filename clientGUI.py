@@ -10,11 +10,12 @@ def execute_command(client, command):
         - fetch fname: fetch some copy from target file
     """
     try:
-        if(command.split(' ')[0] == 'fetch' and len(command.split(' ')) == 2):
+        opString = command.split(' ')[0]
+        if(opString == 'fetch' and len(command.split(' ')) == 2):
             client.sendCommand(command)
             output = "Command is executing... "
             text_area.insert(tk.END, "\n" + output)
-        elif(command.split(' ')[0] == 'publish' and len(command.split(' ')) == 3):
+        elif(opString == 'publish' and len(command.split(' ')) == 3):
             """
                 Check the path and file is valid
             """
@@ -31,7 +32,7 @@ def execute_command(client, command):
                 else:
                     text_area.insert(tk.END, f"\n The file '{inputFileName}' exists in local repository.")
             else:
-                text_area.insert(tk.END, f"\n The file '{inputFileName}' exists in the directory '{inputPath}'.")
+                text_area.insert(tk.END, f"\n The file '{inputFileName}' does not exist in the directory '{inputPath}'.")
         else:
             text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         
