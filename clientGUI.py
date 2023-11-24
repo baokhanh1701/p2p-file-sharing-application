@@ -1,6 +1,9 @@
 from utils.ClientClass import *
 from tkinter import scrolledtext
 import os
+import shutil
+
+
 
 # Function to execute the command
 def execute_command(client, command):
@@ -12,9 +15,14 @@ def execute_command(client, command):
     try:
         opString = command.split(' ')[0]
         if(opString == 'fetch' and len(command.split(' ')) == 2):
-            client.sendCommand(command)
-            output = "Command is executing... "
-            text_area.insert(tk.END, "\n" + output)
+            # check if filename exist in local repository
+            filename = command.split(' ')[1]
+            if(filename in localRepository):
+                text_area.insert(tk.END, "\n {} has already existed in your repository".format(filename))
+            else:     
+                client.sendCommand(command)
+                # output = "Command is executing... "
+                # text_area.insert(tk.END, "\n" + output)
         elif(opString == 'publish' and len(command.split(' ')) == 3):
             """
                 Check the path and file is valid
@@ -28,11 +36,15 @@ def execute_command(client, command):
                     localRepository.append(inputFileName)
                     repository_listbox.insert(tk.END, inputFileName)
                     output = "The file is added to repository successfully!! "
+                    # Copy file to general folder
+                    shutil.copy(filePathCheck, "./{}".format(sys.argv[1]))
                     text_area.insert(tk.END, "\n" + output)
                 else:
                     text_area.insert(tk.END, f"\n The file '{inputFileName}' exists in local repository.")
             else:
                 text_area.insert(tk.END, f"\n The file '{inputFileName}' does not exist in the directory '{inputPath}'.")
+        elif(opString == "from" and len(command.split(' ')) == 3):
+            client.sendCommand(command)
         else:
             text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         
@@ -43,11 +55,24 @@ def execute_command(client, command):
         root.destroy()
 
 if __name__ == "__main__":
+    if(len(sys.argv) != 2):
+        print("File need one argument, find {} arguments".format(len(sys.argv)-1))
+        sys.exit()
+    ftpPort = sys.argv[1]
     client = Client()
     
     # Create the main window
     root = tk.Tk()
     root.title("Command Shell for client")
+    
+    # Create FTP Server
+    server_address = ('127.0.0.1', ftpPort)
+    username = 'user'
+    password = '12345'
+    directory = './' # Folder of a FTP server
+    peer_server = ClientFTPServer(server_address, username, password, directory)
+    peer_server_thread = threading.Thread(target=peer_server.start_server)
+    peer_server_thread.start()
 
     # Entry for command input
     entry = tk.Entry(root, width=50)
@@ -79,5 +104,5 @@ if __name__ == "__main__":
     execute_button = tk.Button(root, text="Execute", command=lambda: execute_command(client, entry.get()))
     execute_button.pack(padx=10, pady=5)
     client.run(text_area)
-    # sys.excepthook = lambda: root.destroy() // exception for broadcast
+    client.sendCommand("FTPport {}".format(sys.argv[1]))
     root.mainloop()
