@@ -14,7 +14,12 @@ The clients can save some files in their local repository and send repository fo
 
 The server can save the folder tree of clients and connect them directly when a client require to fetch a file from another one.
 
-## Current Workload
+## Current
+Ver 0.2.0:
+  - Complete 4 basic commands
+  - Code is not optimal
+  - Did not catch exception yet
+
 Ver 0.1.1: 
   - Build simple GUI for client and server with python GUI
   - Build class for client and server with multi-threading and can be executed along with GUI 
