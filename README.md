@@ -45,8 +45,8 @@ Ver 0.1.0:
 ## Installation
 ```bash
 git clone https://github.com/baokhanh1701/p2p-file-sharing-application.git
-pip install -r requirements.txt
 cd ./p2p-file-sharing-application
+pip install -r requirements.txt
 python3 serverGUI.py
 ```
 Open new terminal to run client and replace PORTNUMBER as client FTP port
