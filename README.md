@@ -15,6 +15,11 @@ The clients can save some files in their local repository and send repository fo
 The server can save the folder tree of clients and connect them directly when a client require to fetch a file from another one.
 
 ## Current
+Ver 0.2.1:
+  - Optimize performance
+  - Update file after fetching to local repository and server
+  - Fix minor error
+
 Ver 0.2.0:
   - Complete 4 basic commands
   - Code is not optimal
@@ -40,12 +45,13 @@ Ver 0.1.0:
 ## Installation
 ```bash
 git clone https://github.com/baokhanh1701/p2p-file-sharing-application.git
+pip install -r requirements.txt
 cd ./p2p-file-sharing-application
 python3 serverGUI.py
 ```
-Open new terminal to run client
+Open new terminal to run client and replace PORTNUMBER as client FTP port
 ```bash
-python3 clientGUI.py
+python3 clientGUI.py PORTNUMBER
 ```
 
 ## Contributing

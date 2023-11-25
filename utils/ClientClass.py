@@ -1,13 +1,4 @@
-import tkinter as tk
-import socket
-import threading
-import sys
-# library for FTP server
-from pyftpdlib.authorizers import DummyAuthorizer
-from pyftpdlib.handlers import FTPHandler
-from pyftpdlib.servers import FTPServer
-from ftplib import FTP
-import os
+from .lib import *
 
 class Client:
     def __init__(self):
@@ -20,24 +11,25 @@ class Client:
         try:
             while True:
                 receivedMessage = self.clientSocket.recv(1024).decode()
+                # check for ping message
                 if(receivedMessage == "PING"):
                     returnPingMessage = "PONG"
                     try:
+                        time.sleep(0.5)
                         self.clientSocket.send(returnPingMessage.encode())
                     except ConnectionError:
                         raise ConnectionError("Server is closed or unavailable")
-                elif(receivedMessage.split(' ')[0] == "fetching"):
-                    portname = receivedMessage.split(' ')[2]
-                    filename = receivedMessage.split(' ')[1]
-                    print("receive fetching command {} {}".format(portname, filename))
-                    peer_client = ClientFTPClient()
-                    peer_client.connect('127.0.0.1', int(portname), 'user', '12345')
-                    # print("Remote path: ", "./{}/{}".format(portname, filename))
-                    # print("Local path: ", "./{}".format(sys.argv[1]))
-                    peer_client.download_file("./{}/{}".format(portname, filename), "./{}".format(sys.argv[1]))
-                    # peer_client.download_file('./21/vid.mp4', './22')
+                # check for fetch message
+                # elif(receivedMessage.split(' ')[0] == "fetching"):
+                #     portname = receivedMessage.split(' ')[2]
+                #     filename = receivedMessage.split(' ')[1]
+                #     print(f"receive fetching command {portname} {filename}")
+                #     peer_client = ClientFTPClient()
+                #     peer_client.connect('127.0.0.1', int(portname), 'user', '12345')
+                #     peer_client.download_file(f"./{portname}/{filename}", f"./{sys.argv[1]}")
+                # other message will be printed to output directly
                 else:
-                    text_area.insert(tk.END, "\n" + receivedMessage)
+                    addTextToOutput(text_area, receivedMessage)
                     
         except ConnectionError as err:
             raise ConnectionError("Server is closed or unavailable")
@@ -49,8 +41,14 @@ class Client:
             raise ConnectionError("Server is closed or unavailable")
         
     def run(self, text_area):
-        receiveThread = threading.Thread(target = self.broadcast, args= (text_area, ))
-        receiveThread.start()
+        self.receiveThread = threading.Thread(target = self.broadcast, args= (text_area, ))
+        self.receiveThread.start()
+        
+    def close(self):
+        # close connection to server
+        # join receiveThread
+        self.clientSocket.close()
+        self.receiveThread.join()
         
 class ClientFTPServer:
     def __init__(self, address, username, password, directory):
@@ -63,6 +61,10 @@ class ClientFTPServer:
 
     def start_server(self):
         self.server.serve_forever()
+    
+    def close_server(self):
+        # close FTP server
+        self.server.close_all()
         
 class ClientFTPClient:
     def __init__(self):
@@ -71,10 +73,6 @@ class ClientFTPClient:
     def connect(self, host, port, username, password):
         self.ftp.connect(host, port)
         self.ftp.login(username, password)
-
-    def upload_file(self, local_file_path, remote_file_path):
-        with open(local_file_path, 'rb') as file:
-            self.ftp.storbinary(f"STOR {remote_file_path}", file)
 
     def download_file(self, remote_file_path, local_folder_path):
         try:

@@ -1,16 +1,18 @@
 from utils.ServerClass import *
-from tkinter import scrolledtext
-
-
-# print (saveLocalClient)
-# print (printingLogWaiting)
+from utils.lib import *
 
 class ServerGUI:
   def __init__(self):
+    # Create signal for update real-time threading
+    self.realTimeSignal = True
+    
     # Create the main window and
     self.root = tk.Tk()
     self.root.title("Command Shell for server")
-  
+
+    # catch action closing server
+    self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+    
     # Entry for command input
     entry = tk.Entry(self.root, width = 50)
     entry.pack(padx=10, pady = 10)
@@ -18,11 +20,20 @@ class ServerGUI:
     # Text area to display command output
     self.textArea = scrolledtext.ScrolledText(self.root, wrap = tk.WORD, width = 60, height = 20)
     self.textArea.pack(padx = 10, pady = 10)
-    self.textArea.insert(tk.END, "\n The server is running on {}/{}".format(host, port))
+    addTextToOutput(self.textArea, f"The server is running on {host}/{port}")
     
     # Button to execute command
     executeButton = tk.Button(self.root, text = "Execute", command = lambda: self.execute_command(entry.get()))
     executeButton.pack(padx=10, pady = 5)
+  
+  def on_closing(self):
+    if messagebox.askokcancel("Quit", "Do you want to quit? "):
+      server.close()
+      # join all thread to main and close 
+      self.realTimeSignal = False
+      updateLogThread.join()
+      # serverThread.join()
+      self.root.destroy()
   
   def run(self):
     self.root.mainloop() 
@@ -40,32 +51,31 @@ class ServerGUI:
         try: 
           if(int(clientAddress) in saveLocalClient):
             if(len(saveLocalClient[int(clientAddress)]) > 0):
-              self.textArea.insert(tk.END, "\nThe client {} has following files: ".format(clientAddress))
+              addTextToOutput(self.textArea, f"The client {clientAddress} has following files:")
               for localFile in saveLocalClient[int(clientAddress)]:
-                self.textArea.insert(tk.END, "\n - {}".format(localFile))
+                addTextToOutput(self.textArea, f" - {localFile}")
             else:
-              self.textArea.insert(tk.END, "\n This client did not upload any files")
+              addTextToOutput(self.textArea, f"This client did not upload any files")
           else:
-            self.textArea.insert(tk.END, "\n This hostname does not exist in server")
+            addTextToOutput(self.textArea, "This hostname does not exist in server")
         except KeyError:
-          self.textArea.insert(tk.END, "\n Your hostname is invalid")
+          addTextToOutput(self.textArea, "Your hostname is invalid")
       elif(opString == 'ping'):
         hostname = command.split(' ')[1]
         pingThread = threading.Thread(target = server.ping, args = (hostname, self.textArea))
-        # pingStatus, responseTime = server.ping(hostname)
         pingThread.start()
       else:
-        self.textArea.insert(tk.END, "\n The command is invalid")  
+        addTextToOutput(self.textArea, "This command is invalid")
     else:
-      self.textArea.insert(tk.END, "\n The command is invalid")  
-    
-    
+      addTextToOutput(self.textArea, "This command is invalid")
+
+  # update log from server per 0.1s  
   def updateRealtime(self):
-    while True:
-      time.sleep(0.5)
-      if(len( printingLogWaiting ) != 0):
+    while self.realTimeSignal:
+      time.sleep(0.05)
+      if( len( printingLogWaiting ) != 0 ):
         for log in printingLogWaiting:
-          self.textArea.insert(tk.END, "\n" + log)
+          addTextToOutput(self.textArea, log)
         printingLogWaiting.clear()
       
       

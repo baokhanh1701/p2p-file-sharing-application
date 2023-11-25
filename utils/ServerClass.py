@@ -1,7 +1,4 @@
-import socket
-import threading
-import time
-import tkinter as tk
+from .lib import *
 
 pingSignal = threading.Event()
 
@@ -34,45 +31,38 @@ class Server:
           - publish lname fname: lname(link), fname(name of file)
           - fetch fname: fetch some copy from target file
         """
-        # print('{} send to server: {}'.format(clientAddress, clientMessage))
-        printingLogWaiting.append('{} send to server: {}'.format(clientAddress, clientMessage))
+        printingLogWaiting.append(f'{clientAddress} send to server: {clientMessage}')
         ## fetch case
         if  (clientMessage.split(' ')[0] == 'fetch'):
-          # print('in fetch command')
           fetchFile = clientMessage.split(' ')[1]
           clientsHaveFile = SearchLocalClient(fetchFile)
           returnMessage = ''
           if(len(clientsHaveFile) > 0):
-            # print('Found client has file')
             returnMessage = "Clients have file :"
             for client in clientsHaveFile:
-              returnMessage += "\n - {} with ftpPort: {}".format(client, self.FTPportClient[client])
+              returnMessage += f"\n - {client} with ftpPort: {self.FTPportClient[client]}"
             returnMessage += "\n Which client you want to fetch from ?"
           else:
-            print('cannot find')
-            returnMessage = 'There is no client having {}'.format(fetchFile)
+            returnMessage = f'There is no client having {fetchFile}'
           clientSocket.send(returnMessage.encode())
-          printingLogWaiting.append('{} want to fetch file name: {}'.format(clientAddress, clientMessage.split(' ')[1]))
+          printingLogWaiting.append(f'{clientAddress} want to fetch file name: {clientMessage.split(" ")[1]}')
         ## publish case
         elif (clientMessage.split(' ')[0] == 'publish'):
-          # print('link: {}'.format(clientMessage.split(' ')[1]))
-          # print('filename: {}'.format(clientMessage.split(' ')[2]))
           saveLocalClient[clientAddress[1]].append(clientMessage.split(' ')[2])
-          print(saveLocalClient)
-          printingLogWaiting.append('link: {}'.format(clientMessage.split(' ')[1]))
-          printingLogWaiting.append('filename: {}'.format(clientMessage.split(' ')[2])) 
+          printingLogWaiting.append(f'link: {clientMessage.split(" ")[1]}')
+          printingLogWaiting.append(f'filename: {clientMessage.split(" ")[2]}') 
+        elif (clientMessage.split(' ')[0] == 'update'):
+          saveLocalClient[clientAddress[1]].append(clientMessage.split(' ')[1])
+          printingLogWaiting.append(f'update filename: {clientMessage.split(" ")[2]}') 
         elif(clientMessage == 'PONG'):
           time.sleep(0.5)
           pingSignal.set()
         elif(clientMessage.split(' ')[0] == 'FTPport'):
           ftpPort = clientMessage.split(' ')[1]
           self.FTPportClient[(clientAddress[1])] = (ftpPort)
-        elif(clientMessage.split(' ')[0] == 'from'):
-          print("in from command")
-          portname = clientMessage.split(' ')[1]
-          filename = clientMessage.split(' ')[2]
-          clientSocket.send("fetching {} {}".format(filename, portname).encode())
-          print("start fetching {} {}".format(portname, filename))
+        elif(clientMessage=="disconnect"):
+          printingLogWaiting.append(f'{clientAddress} is disconnected')
+          # clientSocket.close()
       except:
         break   
   
@@ -88,24 +78,23 @@ class Server:
       
       endTime = time.time()
       elapsedTime = endTime - startTime
-      # print("ping successfully, time: {}", elapsedTime)
-      textArea.insert(tk.END, "\n ping successfully, time: {:.5f}ms".format(elapsedTime*1000))
+      addTextToOutput(textArea, f"ping successfully, time: {elapsedTime*1000:.5f}ms")
     except Exception as err:
-      print("Got error: {}".format(err))
+      print(f"Got error: {err}")
   
   def run(self):
     self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.serverSocket.bind((self.host, self.port))
     self.serverSocket.listen(5)
-    print('Server is running on {}/{}'.format(self.host, self.port))
+    print(f'Server is running on {self.host}/{self.port}')
     try:
       while True:
         self.serverSocket.settimeout(1)
         try:
           clientSocket, clientAddress  = self.serverSocket.accept()
           self.connections[clientAddress[1]] = clientSocket
-          clientSocket.send('{} is your address'.format(clientAddress).encode())
-          print('{} is connected'.format(clientAddress))
+          clientSocket.send(f'{clientAddress} is your address'.encode())
+          printingLogWaiting.append(f"{clientAddress} is connected")
           clientHandler = threading.Thread(target = self.clientHandle, args = (clientSocket, clientAddress))
           clientHandler.start()
           saveLocalClient[clientAddress[1]] = [] ## create server storage for clientAddress
@@ -113,7 +102,14 @@ class Server:
           pass
     except KeyboardInterrupt:
       print('Keyboard Interrupted! The server is closed')
-      for conn in self.connections:
-        conn.close()
-      self.serverSocket.close()
+      # for conn in self.connections:
+      #   conn.close()
+      # self.serverSocket.close()
+  
+  def close(self):
+    for key in self.connections:
+      # print(key)
+      self.connections[key].close()
+    print(self.serverSocket)
+    self.serverSocket.close()
       
