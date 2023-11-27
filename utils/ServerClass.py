@@ -23,62 +23,83 @@ class Server:
     self.FTPportClient = {}
 
   def clientHandle(self, clientSocket, clientAddress):
-    while True:
-      try:
-        clientMessage = clientSocket.recv(1024).decode()
+    
+    try:
+      while True:
+        clientMessage = clientSocket.recv(1024)
+        clientJSONMessage = json.loads(clientMessage.decode('utf-8'))
+        # print("receive message from client")
+        # print(receiveData)
         """ 
           Valid command in client:
           - publish lname fname: lname(link), fname(name of file)
           - fetch fname: fetch some copy from target file
         """
-        printingLogWaiting.append(f'{clientAddress} send to server: {clientMessage}')
+        opString = clientJSONMessage.get('HEADER')
+        payload = clientJSONMessage.get('PAYLOAD')
+        printingLogWaiting.append(f'{clientAddress} send to server: {clientJSONMessage}')
+        # continue
         ## fetch case
-        if  (clientMessage.split(' ')[0] == 'fetch'):
-          fetchFile = clientMessage.split(' ')[1]
+        if  (opString == 'fetch'):
+          fetchFile = payload.get('filename')
           clientsHaveFile = SearchLocalClient(fetchFile)
           returnMessage = ''
           if(len(clientsHaveFile) > 0):
             returnMessage = "Clients have file :"
             for client in clientsHaveFile:
-              returnMessage += f"\n - {client} with ftpPort: {self.FTPportClient[client]}"
-            returnMessage += "\n Which client you want to fetch from ?"
+              returnMessage += f"\n  - {client} with ftpPort: {self.FTPportClient[client]}"
+            returnMessage += "\nWhich client you want to fetch from ?"
+            # print(returnMessage)
           else:
             returnMessage = f'There is no client having {fetchFile}'
-          clientSocket.send(returnMessage.encode())
-          printingLogWaiting.append(f'{clientAddress} want to fetch file name: {clientMessage.split(" ")[1]}')
+          returnClientJSONMessage = convertJSONProtocol(f"message>server>{returnMessage}")
+          # print(returnClientJSONMessage)
+          clientSocket.sendall((returnClientJSONMessage).encode('utf-8'))
+          
+          printingLogWaiting.append(f'{clientAddress} want to fetch file name: {fetchFile}')
         ## publish case
-        elif (clientMessage.split(' ')[0] == 'publish'):
-          saveLocalClient[clientAddress[1]].append(clientMessage.split(' ')[2])
-          printingLogWaiting.append(f'link: {clientMessage.split(" ")[1]}')
-          printingLogWaiting.append(f'filename: {clientMessage.split(" ")[2]}') 
-        elif (clientMessage.split(' ')[0] == 'update'):
-          saveLocalClient[clientAddress[1]].append(clientMessage.split(' ')[1])
-          printingLogWaiting.append(f'update filename: {clientMessage.split(" ")[2]}') 
-        elif(clientMessage == 'PONG'):
-          time.sleep(0.5)
+        elif (opString == 'publish'):
+          saveLocalClient[clientAddress[1]].append(payload.get("filename"))
+          printingLogWaiting.append(f'link: {payload.get("path")}')
+          printingLogWaiting.append(f'filename: {payload.get("filename")}') 
+        elif (opString== 'update'):
+          saveLocalClient[clientAddress[1]].append(payload.get("filename"))
+          printingLogWaiting.append(f'update filename: {payload.get("filename")}') 
+        elif(opString == 'client' and payload.get("message") == 'pong'):
+          print('server catch pong response')
+          time.sleep(0.1)
           pingSignal.set()
-        elif(clientMessage.split(' ')[0] == 'FTPport'):
-          ftpPort = clientMessage.split(' ')[1]
+        elif(opString == 'init'):
+          ftpPort = payload.get("ftpPort")
           self.FTPportClient[(clientAddress[1])] = (ftpPort)
-        elif(clientMessage=="disconnect"):
-          printingLogWaiting.append(f'{clientAddress} is disconnected')
+        # elif(clientMessage=="disconnect"):
+        #   printingLogWaiting.append(f'{clientAddress} is disconnected')
           # clientSocket.close()
-      except:
-        break   
-  
+    except ConnectionResetError:
+      time.sleep(1)
+      # print("Client abruptly disconnected")
+      printingLogWaiting.append(f'{clientAddress[1]} is disconnected from server')
+      del saveLocalClient[clientAddress[1]] 
+      # break
+    except json.JSONDecodeError:
+      # print(f"Catch error: {e}")   
+      print("Invalid JSON received")
+    except Exception as e:
+      print(f"Error: {e}")
   def ping(self, hostname, textArea):
     try:
-      pingMessage = "PING"
+      jsonMessage = convertJSONProtocol(f"ping {hostname}")
       startTime = time.time()
       hostnameSocket = self.connections[int(hostname)]
-      hostnameSocket.send(pingMessage.encode())
+      hostnameSocket.sendall((jsonMessage).encode('utf-8'))
       
       # Waiting for response
-      pingSignal.wait()
-      
-      endTime = time.time()
-      elapsedTime = endTime - startTime
-      addTextToOutput(textArea, f"ping successfully, time: {elapsedTime*1000:.5f}ms")
+      if(pingSignal.wait(3)):
+        endTime = time.time()
+        elapsedTime = endTime - startTime
+        addTextToOutput(textArea, f"ping successfully, time: {elapsedTime*1000:.5f}ms")
+      else:
+        addTextToOutput(textArea, f"ping failed, invalid response")
     except Exception as err:
       print(f"Got error: {err}")
   
@@ -89,27 +110,25 @@ class Server:
     print(f'Server is running on {self.host}/{self.port}')
     try:
       while True:
-        self.serverSocket.settimeout(1)
+        # self.serverSocket.settimeout(1)
         try:
           clientSocket, clientAddress  = self.serverSocket.accept()
           self.connections[clientAddress[1]] = clientSocket
-          clientSocket.send(f'{clientAddress} is your address'.encode())
+          # clientSocket.send(f'{clientAddress} is your address'.encode())
           printingLogWaiting.append(f"{clientAddress} is connected")
           clientHandler = threading.Thread(target = self.clientHandle, args = (clientSocket, clientAddress))
           clientHandler.start()
           saveLocalClient[clientAddress[1]] = [] ## create server storage for clientAddress
-        except socket.timeout:
-          pass
+        except OSError:
+          # print("Reconnecting...")
+          print("Server is closing ...")
+          break
     except KeyboardInterrupt:
       print('Keyboard Interrupted! The server is closed')
-      # for conn in self.connections:
-      #   conn.close()
-      # self.serverSocket.close()
   
   def close(self):
     for key in self.connections:
-      # print(key)
       self.connections[key].close()
-    print(self.serverSocket)
+    # print(self.serverSocket)
     self.serverSocket.close()
       

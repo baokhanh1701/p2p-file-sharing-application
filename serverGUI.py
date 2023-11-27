@@ -14,8 +14,9 @@ class ServerGUI:
     self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
     
     # Entry for command input
-    entry = tk.Entry(self.root, width = 50)
-    entry.pack(padx=10, pady = 10)
+    self.entry = tk.Entry(self.root, width = 50)
+    self.entry.pack(padx=10, pady = 10)
+    self.entry.bind("<Return>", lambda action: self.execute_command(self.entry.get()))
     
     # Text area to display command output
     self.textArea = scrolledtext.ScrolledText(self.root, wrap = tk.WORD, width = 60, height = 20)
@@ -23,11 +24,11 @@ class ServerGUI:
     addTextToOutput(self.textArea, f"The server is running on {host}/{port}")
     
     # Button to execute command
-    executeButton = tk.Button(self.root, text = "Execute", command = lambda: self.execute_command(entry.get()))
-    executeButton.pack(padx=10, pady = 5)
+    # executeButton = tk.Button(self.root, text = "Execute", command = lambda: self.execute_command(self.entry.get()))
+    # executeButton.pack(padx=10, pady = 5)
   
   def on_closing(self):
-    if messagebox.askokcancel("Quit", "Do you want to quit? "):
+    if messagebox.askokcancel("Quit", "Do you want to stop server? "):
       server.close()
       # join all thread to main and close 
       self.realTimeSignal = False
@@ -44,7 +45,11 @@ class ServerGUI:
       - discover hostname: discover the list of local files of the host named 'hostname'
       - ping hostname: live check the 'hostname'
     """
-    if(len(command.split(' ')) == 2):
+    self.entry.delete(0, tk.END)
+    addTextToOutput(self.textArea, f"server${command}")
+    if(command == "clear"):
+        self.textArea.delete(1.0, tk.END)
+    elif(len(command.split(' ')) == 2):
       opString = command.split(' ')[0]
       if(opString == 'discover'):
         clientAddress = command.split(' ')[1]
@@ -72,7 +77,7 @@ class ServerGUI:
   # update log from server per 0.1s  
   def updateRealtime(self):
     while self.realTimeSignal:
-      time.sleep(0.05)
+      time.sleep(0.01)
       if( len( printingLogWaiting ) != 0 ):
         for log in printingLogWaiting:
           addTextToOutput(self.textArea, log)
