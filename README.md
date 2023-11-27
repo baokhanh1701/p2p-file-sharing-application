@@ -60,10 +60,11 @@ All command for client and server
 ```bash
 publish pathname filename
 fetch filename
-retrieve TCPportname filename
+retrieve FTPportname filename
 clear
 ```
 2. Server
+Server is running on 127.0.0.1/8080
 ```bash
 ping hostname
 discover hostname
