@@ -63,7 +63,7 @@ fetch filename
 retrieve FTPportname filename
 clear
 ```
-2. Server
+2. Server <br>
 Server is running on 127.0.0.1/8080
 ```bash
 ping hostname
