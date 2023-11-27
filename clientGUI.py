@@ -55,19 +55,22 @@ def execute_command(client, command):
     
     # retrieve command to confirm hostname selection
     elif(opString == "retrieve" and len(command.split(' ')) == 3):
-        # client.sendCommand(command)
         portname = command.split(' ')[1]
         filename = command.split(' ')[2]
-        print(f"start fetching from {portname} {filename}")
-        peer_client = ClientFTPClient()
-        peer_client.connect('127.0.0.1', int(portname), 'user', '12345')
-        downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
-        # update client local repository
-        localRepository.append(f"{filename}")
-        repository_listbox.insert(tk.END, f"{filename}")
-        JSONcommand = convertJSONProtocol(f"update ./{ftpPort} {filename}")
-        client.sendCommand(JSONcommand)
-        addTextToOutput(text_area, downloadMessage)
+        # Must check whether filename is fetched or not
+        if(filename in localRepository):
+            addTextToOutput(text_area, "you has fetched this file before")
+        else:
+            print(f"start fetching from {portname} {filename}")
+            peer_client = ClientFTPClient()
+            peer_client.connect('127.0.0.1', int(portname), 'user', '12345')
+            downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
+            # update client local repository
+            localRepository.append(f"{filename}")
+            repository_listbox.insert(tk.END, f"{filename}")
+            JSONcommand = convertJSONProtocol(f"update ./{ftpPort} {filename}")
+            client.sendCommand(JSONcommand)
+            addTextToOutput(text_area, downloadMessage)
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         addTextToOutput(text_area, "Your command is invalid, Please check again!!")

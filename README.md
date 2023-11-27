@@ -5,7 +5,7 @@
  - [Current Workload](#current)
  - [Technology](#technology)
  - [Installation](#installation)
- - [Contributing](#contributing)
+ - [Usage](#usage)
 
 ## Description
 This application is used to build a simple client-server architecture. 
@@ -54,5 +54,19 @@ Open new terminal to run client and replace PORTNUMBER as client FTP port
 python3 clientGUI.py PORTNUMBER
 ```
 
-## Contributing
+## Usage
+All command for client and server
+1. Client
+```bash
+publish pathname filename
+fetch filename
+retrieve TCPportname filename
+clear
+```
+2. Server
+```bash
+ping hostname
+discover hostname
+clear
+```
 
