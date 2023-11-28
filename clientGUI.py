@@ -63,7 +63,7 @@ def execute_command(client, command):
         else:
             print(f"start fetching from {portname} {filename}")
             peer_client = ClientFTPClient()
-            peer_client.connect('127.0.0.1', int(portname), 'user', '12345')
+            peer_client.connect(host, int(portname), 'user', '12345')
             downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
             # update client local repository
             localRepository.append(f"{filename}")
