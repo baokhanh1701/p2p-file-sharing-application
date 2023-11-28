@@ -104,7 +104,7 @@ class ClientFTPServer:
                     clientSocket, clientAddress = self.serverSocket.accept()
                     self.connections[clientAddress[1]] = clientSocket
                     print("a client connected")
-                    clientHandler = threading.Thread(daemon = True,target = self.clientHandle, args = (clientSocket, ))
+                    clientHandler = threading.Thread(target = self.clientHandle, args = (clientSocket, ))
                     clientHandler.start()
                 except OSError:
                     print("File server is closing")
@@ -116,6 +116,7 @@ class ClientFTPServer:
         # self.server.close_all()
         for key in self.connections:
             self.connections[key].close()
+        self.serverSocket.close()
         
 class ClientFTPClient:
     def __init__(self, host, port, localPort):
@@ -123,13 +124,9 @@ class ClientFTPClient:
         self.host = host
         self.port = port
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print(f"{self.host}/{self.port} start to connect to 0.0.0.0/{self.port}")
         self.clientSocket.connect((self.host, self.port))
         self.localPort = localPort
-        # self.fileName = ''
-        # self.filePath = str(port) # Port is also used for folder name
-    # def connect(self, host, port, username, password):
-    #     self.ftp.connect(host, port)
-    #     self.ftp.login(username, password)
     def getFile(self, filename):
         while True:
             receiveMessage = self.clientSocket.recv(1024)

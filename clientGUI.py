@@ -65,15 +65,6 @@ def execute_command(client, command):
             print(f"start fetching from {portname} {filename}")
             peer_client = ClientFTPClient(hostname[0], int(portname), ftpPort)
             peer_client.download_file(f'{portname}', filename)
-            # peer_client = ClientFTPClient()
-            # peer_client.connect(host, int(portname), 'user', '12345')
-            # downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
-            # # update client local repository
-            # localRepository.append(f"{filename}")
-            # repository_listbox.insert(tk.END, f"{filename}")
-            # JSONcommand = convertJSONProtocol(f"update ./{ftpPort} {filename}")
-            # client.sendCommand(JSONcommand)
-            # addTextToOutput(text_area, downloadMessage)
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         addTextToOutput(text_area, "Your command is invalid, Please check again!!")
