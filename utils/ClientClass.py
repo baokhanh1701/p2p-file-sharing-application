@@ -1,6 +1,6 @@
 from .lib import *
 
-
+# global text_area
 
 class Client:
     def __init__(self, host, port):
@@ -34,8 +34,7 @@ class Client:
                 except Exception:
                     # raise ConnectionError("Server is closed or unavailable")
                     addTextToOutput(text_area, "Server is closed or unavailable")  
-                    break
-            print("out while")        
+                    break      
         except ConnectionError or ConnectionResetError:
             # raise ConnectionError("Server is closed or unavailable")
             addTextToOutput(text_area, "Server is closed or unavailable")
@@ -86,22 +85,28 @@ class ClientFTPServer:
             folder = payload.get('hostname') # hostname = folder
             current_path = os.getcwd()
             # print(f'{current_path}/{folder}/{filename}')
-            print(f'CLient address: {clientSocket.getsockname()}')
+            print(f'Client address: {clientSocket.getsockname()}')
             file_size = os.path.getsize(f'{current_path}/{folder}/{filename}')
             loaded = 0
-            with open(f'{current_path}/{folder}/{filename}', 'rb') as file:
-                file_data = file.read(1024)
-                loaded += 1024
-                while file_data:
-                    if not file_data:
-                        print('end task')
-                        break
-                    print(f'server is sending ...{loaded/file_size}%')
-                    clientSocket.send(file_data)
-                    file_data = file.read(1024)
-            clientSocket.shutdown(socket.SHUT_WR)
+            try:
+                with open(f'{current_path}/{folder}/{filename}', 'rb') as file:
+                    file_data = file.read(4096)
+                    while file_data:
+                        if not file_data:
+                            print('end task')
+                            break
+                        else:
+                            loaded += len(file_data)
+                            # addTextToOutput(text_area, f'server is sending ...{round(loaded/file_size*100, 2)}%')
+                            print(f'server is sending ...{round(loaded/file_size*100, 2)}%')
+                            clientSocket.send(file_data)
+                            file_data = file.read(4096)
+                clientSocket.close()
+                print("File sent, connection closed")
+            except OSError as err:
+                print(f'OSError: {err}')
         except Exception as err:
-            print(f"Catch exception: {err}")
+            print(f'{err}')
     def start_server(self):
         # self.server.serve_forever()
         self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -122,8 +127,6 @@ class ClientFTPServer:
         except Exception as err:
             print(f"Exception error: {err}")
     def close_server(self):
-        # close FTP server
-        # self.server.close_all()
         for key in self.connections:
             self.connections[key].close()
         self.serverSocket.close()
@@ -138,14 +141,18 @@ class ClientFTPClient:
         self.clientSocket.connect((self.host, self.port))
         self.localPort = localPort
     def getFile(self, filename):
-        with open(f'./{self.localPort}/{filename}', 'wb') as file:
-            while True:
-                receiveMessage = self.clientSocket.recv(1024)
-                print('client is getting ...')
-                if not receiveMessage:
-                    print('end task')
-                    break
-                file.write(receiveMessage)
+        try:
+            with open(f'./{self.localPort}/{filename}', 'wb') as file:
+                while True:
+                    receiveMessage = self.clientSocket.recv(4096)
+                    print('client is getting ...')
+                    if not receiveMessage:
+                        # update filename to server
+                        print('Get file successfully')
+                        break
+                    file.write(receiveMessage)
+        except Exception as err:
+            raise Exception(f"Exception in getFile: {err}")
         # self.serverSocket.close()
     def download_file(self, remote_folder, remote_filename):
         try:
@@ -153,5 +160,6 @@ class ClientFTPClient:
             print(JSONMessage)
             self.clientSocket.sendall((JSONMessage).encode('utf-8'))
             self.getFile(remote_filename)
+            return f"File {remote_filename} is download successfully"
         except Exception as e:
             return (f"Error downloading file: {e}")

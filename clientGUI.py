@@ -11,7 +11,7 @@ def execute_command(client, command):
         - fetch fname: fetch some copy from target file
         - from ftpPort filename: confirm to get filename from ftpPort
     """
-    addTextToOutput(text_area, f"user-{hostname[1]}${command}")
+    addTextToOutput(text_area, f"user-{hostname[1]}> {command}")
     # convert command string to json
     jsonProtocolCommand = ''
     # print(jsonProtocolCommand)
@@ -63,8 +63,20 @@ def execute_command(client, command):
             addTextToOutput(text_area, "you has fetched this file before")
         else:
             print(f"start fetching from {portname} {filename}")
+            start_time = time.time()
             peer_client = ClientFTPClient(sys.argv[1], int(portname), ftpPort)
-            peer_client.download_file(f'{portname}', filename)
+            downloadMessage = peer_client.download_file(f'{portname}', filename)
+            end_time = time.time()
+            addTextToOutput(text_area, downloadMessage)
+            addTextToOutput(text_area, f"-> Download time: {round((end_time - start_time)*1000, 2)} ms")
+            download_file_size = os.path.getsize(f'./{portname}/{filename}')
+            addTextToOutput(text_area, f"-> File size: {round(download_file_size/1024, 2)} KB")
+            addTextToOutput(text_area, f"-> Download speed: {round((download_file_size/1024)/(end_time - start_time), 2)} kbps")
+            jsonCommand = convertJSONProtocol(f"update ./{portname} {filename}")
+            # update local repository
+            repository_listbox.insert(tk.END, filename)
+            localRepository.append(filename)
+            client.sendCommand(jsonCommand)
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         addTextToOutput(text_area, "Your command is invalid, Please check again!!")
@@ -73,7 +85,6 @@ def on_closing():
     ## interrupt connection here
     if messagebox.askokcancel("Quit", "Do you want to interrupt connection? "):
         # send to server disconnect signal
-        # client.sendCommand("disconnect")
         # close FTP server
         peer_server.close_server()
         peer_server_thread.join()
@@ -106,19 +117,19 @@ if __name__ == "__main__":
     
     # Create the main window
     root = tk.Tk()
-    root.title("Command Shell for client")
+    root.title(f"Command Shell for client {host}/{port}, ftpPort: {ftpPort}")
     
     # Catch action user close window
     root.protocol("WM_DELETE_WINDOW", on_closing)
     
-    # Create FTP Server
-    # username = 'user'
-    # password = '12345'
-    # directory = './' # Folder of a FTP server
+    # Create Server for file transferring
     peer_server = ClientFTPServer(ftp_host, ftpPort)
     peer_server_thread = threading.Thread(target=peer_server.start_server)
     peer_server_thread.start()
 
+    entry_label = tk.Label(root, text = "Enter command here")
+    entry_label.pack(padx=10, pady = 5)
+   
     # Entry for command input
     entry = tk.Entry(root, width=50)
     entry.pack(padx=10, pady=10)
@@ -131,6 +142,7 @@ if __name__ == "__main__":
     # Text area to display command output
     text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=60, height=20)
     text_area.pack(padx=10, pady=10)
+    # text_area.config(state = tk.DISABLED)
 
     # Label for repository list
     repository_label = tk.Label(repository_frame, text="Local repository")

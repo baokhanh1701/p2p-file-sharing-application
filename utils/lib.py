@@ -19,8 +19,10 @@ from ftplib import FTP
 
 # add text to text_area and scroll to the end
 def addTextToOutput(text_area, text):
+  text_area.config(state = tk.NORMAL)
   text_area.insert(tk.END, f"\n {text}")
   text_area.see(tk.END)
+  text_area.config(state = tk.DISABLED)
   
 # analyze message to return JSON protocol  
 def convertJSONProtocol(message):

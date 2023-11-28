@@ -48,7 +48,7 @@ class Server:
             returnMessage = "Clients have file :"
             for client in clientsHaveFile:
               returnMessage += f"\n  - {client} with ftpPort: {self.FTPportClient[client]}"
-            returnMessage += "\nWhich client you want to fetch from ?"
+            returnMessage += "\n Which client you want to fetch from ?"
             # print(returnMessage)
           else:
             returnMessage = f'There is no client having {fetchFile}'
