@@ -57,20 +57,23 @@ def execute_command(client, command):
     elif(opString == "retrieve" and len(command.split(' ')) == 3):
         portname = command.split(' ')[1]
         filename = command.split(' ')[2]
+        
         # Must check whether filename is fetched or not
         if(filename in localRepository):
             addTextToOutput(text_area, "you has fetched this file before")
         else:
             print(f"start fetching from {portname} {filename}")
-            peer_client = ClientFTPClient()
-            peer_client.connect(host, int(portname), 'user', '12345')
-            downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
-            # update client local repository
-            localRepository.append(f"{filename}")
-            repository_listbox.insert(tk.END, f"{filename}")
-            JSONcommand = convertJSONProtocol(f"update ./{ftpPort} {filename}")
-            client.sendCommand(JSONcommand)
-            addTextToOutput(text_area, downloadMessage)
+            peer_client = ClientFTPClient(hostname[0], int(portname), ftpPort)
+            peer_client.download_file(f'{portname}', filename)
+            # peer_client = ClientFTPClient()
+            # peer_client.connect(host, int(portname), 'user', '12345')
+            # downloadMessage = peer_client.download_file(f"./{portname}/{filename}", f"./{ftpPort}")
+            # # update client local repository
+            # localRepository.append(f"{filename}")
+            # repository_listbox.insert(tk.END, f"{filename}")
+            # JSONcommand = convertJSONProtocol(f"update ./{ftpPort} {filename}")
+            # client.sendCommand(JSONcommand)
+            # addTextToOutput(text_area, downloadMessage)
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         addTextToOutput(text_area, "Your command is invalid, Please check again!!")
@@ -102,6 +105,7 @@ if __name__ == "__main__":
         print("Can not connect to server")
         sys.exit()
         
+    ftp_host = '0.0.0.0'
     ftpPort = client.getHostName()[1] % 100
     
     #Create folder for local repository
@@ -117,11 +121,10 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", on_closing)
     
     # Create FTP Server
-    server_address = ('0.0.0.0', ftpPort)
-    username = 'user'
-    password = '12345'
-    directory = './' # Folder of a FTP server
-    peer_server = ClientFTPServer(server_address, username, password, directory)
+    # username = 'user'
+    # password = '12345'
+    # directory = './' # Folder of a FTP server
+    peer_server = ClientFTPServer(ftp_host, ftpPort)
     peer_server_thread = threading.Thread(target=peer_server.start_server)
     peer_server_thread.start()
 
