@@ -87,9 +87,19 @@ class ClientFTPServer:
             current_path = os.getcwd()
             # print(f'{current_path}/{folder}/{filename}')
             print(f'CLient address: {clientSocket.getsockname()}')
+            file_size = os.path.getsize(f'{current_path}/{folder}/{filename}')
+            loaded = 0
             with open(f'{current_path}/{folder}/{filename}', 'rb') as file:
-                file_data = file.read()
-                clientSocket.sendall(file_data)
+                file_data = file.read(1024)
+                loaded += 1024
+                while file_data:
+                    if not file_data:
+                        print('end task')
+                        break
+                    print(f'server is sending ...{loaded/file_size}%')
+                    clientSocket.send(file_data)
+                    file_data = file.read(1024)
+            clientSocket.shutdown(socket.SHUT_WR)
         except Exception as err:
             print(f"Catch exception: {err}")
     def start_server(self):
@@ -128,33 +138,17 @@ class ClientFTPClient:
         self.clientSocket.connect((self.host, self.port))
         self.localPort = localPort
     def getFile(self, filename):
-        while True:
-            receiveMessage = self.clientSocket.recv(1024)
-            print(f'./{self.localPort}/{filename}')
-            with open(f'./{self.localPort}/{filename}', 'wb') as file:
+        with open(f'./{self.localPort}/{filename}', 'wb') as file:
+            while True:
+                receiveMessage = self.clientSocket.recv(1024)
+                print('client is getting ...')
+                if not receiveMessage:
+                    print('end task')
+                    break
                 file.write(receiveMessage)
-                print('Downloaded successfully!')
-                self.serverSocket.close()
-                break
+        # self.serverSocket.close()
     def download_file(self, remote_folder, remote_filename):
         try:
-            # Get remote file path
-            # current_path = os.getcwd()
-            # remote_folder_path = os.path.dirname(remote_file_path)
-            # remote_folder_path_relative = os.path.relpath(remote_folder_path, current_path)
-            # self.ftp.cwd('/'+remote_folder_path_relative)
-            
-            # print(remote_folder_path_relative)
-            
-            # start_time = time.time()
-            # filename = os.path.basename(remote_file_path)  # Extract filename from remote path
-            # local_file_path = os.path.join(local_folder_path, filename)
-            # file_size = os.path.getsize(remote_file_path)
-            # with open(local_file_path, 'wb') as file:
-            #     self.ftp.retrbinary(f"RETR {filename}", file.write)
-            # end_time = time.time()
-            # self.ftp.quit()
-            # return (f"File downloaded to '{local_file_path}' successfully. \nFile capacity: {file_size/1024}KB \nDownloading time: {(end_time - start_time)*1000} ms ")
             JSONMessage = convertJSONProtocol(f'retrieve {remote_folder} {remote_filename}')
             print(JSONMessage)
             self.clientSocket.sendall((JSONMessage).encode('utf-8'))
