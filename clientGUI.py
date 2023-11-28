@@ -63,7 +63,7 @@ def execute_command(client, command):
             addTextToOutput(text_area, "you has fetched this file before")
         else:
             print(f"start fetching from {portname} {filename}")
-            peer_client = ClientFTPClient(hostname[0], int(portname), ftpPort)
+            peer_client = ClientFTPClient(sys.argv[1], int(portname), ftpPort)
             peer_client.download_file(f'{portname}', filename)
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
