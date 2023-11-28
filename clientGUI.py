@@ -90,16 +90,20 @@ def on_closing():
         
 
 if __name__ == "__main__":
-    if(len(sys.argv) != 2):
-        print(f"File need one argument for ftp server port, find {len(sys.argv)-1} arguments")
+    if(len(sys.argv) != 3):
+        print(f"File need 2 arguments for server host and port, find {len(sys.argv)-1} arguments")
         sys.exit()
     # get ftp port from argument
-    ftpPort = sys.argv[1]
+    host = sys.argv[1] # define host for connecting server
+    port = int(sys.argv[2])
     try:
-        client = Client()
+        client = Client(host, port)
     except ConnectionError:
         print("Can not connect to server")
         sys.exit()
+        
+    ftpPort = client.getHostName()[1] % 100
+    
     #Create folder for local repository
     folder_path = os.path.join(os.getcwd(), f"{ftpPort}")
     if(not os.path.exists(folder_path)):
@@ -113,7 +117,7 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", on_closing)
     
     # Create FTP Server
-    server_address = ('127.0.0.1', ftpPort)
+    server_address = ('0.0.0.0', ftpPort)
     username = 'user'
     password = '12345'
     directory = './' # Folder of a FTP server

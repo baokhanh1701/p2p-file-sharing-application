@@ -86,8 +86,10 @@ class ServerGUI:
       
 
 if __name__ == "__main__":
-  host = "127.0.0.1"
-  port = 8080
+  if(len(sys.argv) != 3):
+    print(f"Need 2 arguments to define host and port for server, found {len(sys.argv)-1} arguments")
+  host = sys.argv[1] # host of server
+  port = int(sys.argv[2])
   server = Server(host, port)
   gui = ServerGUI()
   # server = ''
@@ -98,7 +100,6 @@ if __name__ == "__main__":
   
   serverThread.start()
   updateLogThread.start()
-  
   
   gui.run()
   

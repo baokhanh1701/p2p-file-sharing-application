@@ -43,15 +43,16 @@ Ver 0.1.0:
   - backend: JavaScript
 
 ## Installation
+Choose HOSTNAME = '0.0.0.0' and PORTNAME=8080
 ```bash
 git clone https://github.com/baokhanh1701/p2p-file-sharing-application.git
 cd ./p2p-file-sharing-application
 pip install -r requirements.txt
-python3 serverGUI.py
+python3 serverGUI.py HOSTNAME PORTNAME
 ```
-Open new terminal to run client and replace PORTNUMBER as client FTP port
+Open new terminal to run client
 ```bash
-python3 clientGUI.py PORTNUMBER
+python3 clientGUI.py SERVER_HOSTNAME SERVER_PORTNAME 
 ```
 
 ## Usage

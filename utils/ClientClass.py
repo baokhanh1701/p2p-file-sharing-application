@@ -3,12 +3,11 @@ from .lib import *
 
 
 class Client:
-    def __init__(self):
-        self.host = '127.0.0.1'
-        self.port = 8080
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.runningBroadcast = True # signal for broadcast function
-        # self.clientSocket.bind(('0.0.0.0', int(sys.argv[2])))
         try:
             self.clientSocket.connect((self.host, self.port))
         except ConnectionRefusedError:
@@ -65,8 +64,7 @@ class Client:
         print("Closing client ...")
         
     def getHostName(self):
-        return self.clientSocket.getsockname()
-        
+        return self.clientSocket.getsockname()   
 class ClientFTPServer:
     def __init__(self, address, username, password, directory):
         self.address = address
