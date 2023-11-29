@@ -138,7 +138,10 @@ class ClientFTPClient:
         self.port = port
         self.clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print(f"{self.host}/{self.port} start to connect to 0.0.0.0/{self.port}")
-        self.clientSocket.connect((self.host, self.port))
+        try:    
+            self.clientSocket.connect((self.host, self.port))
+        except ConnectionRefusedError:
+            raise ConnectionRefusedError(f"Can not connect to remote server 0.0.0.0/{self.port}")
         self.localPort = localPort
     def getFile(self, filename):
         try:

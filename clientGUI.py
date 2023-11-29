@@ -64,19 +64,23 @@ def execute_command(client, command):
         else:
             print(f"start fetching from {portname} {filename}")
             start_time = time.time()
-            peer_client = ClientFTPClient(sys.argv[1], int(portname), ftpPort)
-            downloadMessage = peer_client.download_file(f'{portname}', filename)
-            end_time = time.time()
-            addTextToOutput(text_area, downloadMessage)
-            addTextToOutput(text_area, f"-> Download time: {round((end_time - start_time)*1000, 2)} ms")
-            download_file_size = os.path.getsize(f'./{ftpPort}/{filename}') 
-            addTextToOutput(text_area, f"-> File size: {round(download_file_size/1024, 2)} KB")
-            addTextToOutput(text_area, f"-> Download speed: {round((download_file_size/1024)/(end_time - start_time), 2)} kbps")
-            jsonCommand = convertJSONProtocol(f"update ./{portname} {filename}")
-            # update local repository
-            repository_listbox.insert(tk.END, filename)
-            localRepository.append(filename)
-            client.sendCommand(jsonCommand)
+            try:
+                peer_client = ClientFTPClient(sys.argv[1], int(portname), ftpPort)
+                downloadMessage = peer_client.download_file(f'{portname}', filename)
+                end_time = time.time()
+                addTextToOutput(text_area, downloadMessage)
+                addTextToOutput(text_area, f"-> Download time: {round((end_time - start_time)*1000, 2)} ms")
+                download_file_size = os.path.getsize(f'./{ftpPort}/{filename}') 
+                addTextToOutput(text_area, f"-> File size: {round(download_file_size/1024, 2)} KB")
+                addTextToOutput(text_area, f"-> Download speed: {round((download_file_size/1024)/(end_time - start_time), 2)} kbps")
+                jsonCommand = convertJSONProtocol(f"update ./{portname} {filename}")
+                # update local repository
+                repository_listbox.insert(tk.END, filename)
+                localRepository.append(filename)
+                client.sendCommand(jsonCommand)
+            except Exception as e:
+                print(f"Error: {e}")
+            
     else:
         # text_area.insert(tk.END, "\n Your command is invalid, Please check again!!" )   
         addTextToOutput(text_area, "Your command is invalid, Please check again!!")
