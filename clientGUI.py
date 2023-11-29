@@ -69,7 +69,7 @@ def execute_command(client, command):
             end_time = time.time()
             addTextToOutput(text_area, downloadMessage)
             addTextToOutput(text_area, f"-> Download time: {round((end_time - start_time)*1000, 2)} ms")
-            download_file_size = os.path.getsize(f'./{portname}/{filename}')
+            download_file_size = os.path.getsize(f'./{ftpPort}/{filename}') 
             addTextToOutput(text_area, f"-> File size: {round(download_file_size/1024, 2)} KB")
             addTextToOutput(text_area, f"-> Download speed: {round((download_file_size/1024)/(end_time - start_time), 2)} kbps")
             jsonCommand = convertJSONProtocol(f"update ./{portname} {filename}")
