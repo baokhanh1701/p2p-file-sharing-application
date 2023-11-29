@@ -47,7 +47,7 @@ class Server:
           if(len(clientsHaveFile) > 0):
             returnMessage = "Clients have file :"
             for client in clientsHaveFile:
-              returnMessage += f"\n  - {client} with ftpPort: {self.FTPportClient[client]}"
+              returnMessage += f"\n  - {client} with ftp server: {self.FTPportClient[client][0]}/{self.FTPportClient[client][1]}"
             returnMessage += "\n Which client you want to fetch from ?"
             # print(returnMessage)
           else:
@@ -70,8 +70,9 @@ class Server:
           time.sleep(0.1)
           pingSignal.set()
         elif(opString == 'init'):
+          host_ip = payload.get("host_ip")
           ftpPort = payload.get("ftpPort")
-          self.FTPportClient[(clientAddress[1])] = (ftpPort)
+          self.FTPportClient[(clientAddress[1])] = (host_ip, ftpPort)
         # elif(clientMessage=="disconnect"):
         #   printingLogWaiting.append(f'{clientAddress} is disconnected')
           # clientSocket.close()

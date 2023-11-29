@@ -9,13 +9,22 @@ import socket
 import threading
 import sys
 import json
+import psutil
 # library for FTP server
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.handlers import FTPHandler
 from pyftpdlib.servers import FTPServer
 from ftplib import FTP
 
-
+# get current wifi ip
+def get_wifi_ip():
+    wifi_ip = None
+    for interface, addrs in psutil.net_if_addrs().items():
+        if interface.startswith('Wi-Fi'):
+            for addr in addrs:
+                if addr.family == socket.AF_INET:
+                    wifi_ip = addr.address
+    return wifi_ip
 
 # add text to text_area and scroll to the end
 def addTextToOutput(text_area, text):
@@ -41,11 +50,13 @@ def convertJSONProtocol(message):
         }
       }
     elif(opString == 'init'):
-      ftpPort = message.split(' ')[1]
+      host_ip = message.split(' ')[1]
+      ftpPort = message.split(' ')[2]
       returnJSONMessage = {
         "HEADER": opString,
         "TYPE": "REQUEST",
         "PAYLOAD": {
+          "host_ip": host_ip,
           "ftpPort": ftpPort 
         }
       }

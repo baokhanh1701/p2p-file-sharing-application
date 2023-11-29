@@ -55,25 +55,27 @@ def execute_command(client, command):
     
     # retrieve command to confirm hostname selection
     elif(opString == "retrieve" and len(command.split(' ')) == 3):
-        portname = command.split(' ')[1]
+        server_name = command.split(' ')[1]
+        host_name = server_name.split('/')[0]
+        port_name = server_name.split('/')[1]
         filename = command.split(' ')[2]
         
         # Must check whether filename is fetched or not
         if(filename in localRepository):
             addTextToOutput(text_area, "you has fetched this file before")
         else:
-            print(f"start fetching from {portname} {filename}")
+            print(f"start fetching from {host_name}/{port_name} {filename}")
             start_time = time.time()
             try:
-                peer_client = ClientFTPClient(sys.argv[1], int(portname), ftpPort)
-                downloadMessage = peer_client.download_file(f'{portname}', filename)
+                peer_client = ClientFTPClient(host_name, int(port_name), ftpPort)
+                downloadMessage = peer_client.download_file(f'{port_name}', filename)
                 end_time = time.time()
                 addTextToOutput(text_area, downloadMessage)
                 addTextToOutput(text_area, f"-> Download time: {round((end_time - start_time)*1000, 2)} ms")
                 download_file_size = os.path.getsize(f'./{ftpPort}/{filename}') 
                 addTextToOutput(text_area, f"-> File size: {round(download_file_size/1024, 2)} KB")
                 addTextToOutput(text_area, f"-> Download speed: {round((download_file_size/1024)/(end_time - start_time), 2)} kbps")
-                jsonCommand = convertJSONProtocol(f"update ./{portname} {filename}")
+                jsonCommand = convertJSONProtocol(f"update ./{port_name} {filename}")
                 # update local repository
                 repository_listbox.insert(tk.END, filename)
                 localRepository.append(filename)
@@ -163,7 +165,8 @@ if __name__ == "__main__":
  
     client.run(text_area)
     # Send ftp port to server for saving on server database
-    initMessage = convertJSONProtocol(f"init {ftpPort}")
+    current_wifi_ip = get_wifi_ip()
+    initMessage = convertJSONProtocol(f"init {current_wifi_ip} {ftpPort}")
     client.sendCommand(initMessage)
     
     root.mainloop()
