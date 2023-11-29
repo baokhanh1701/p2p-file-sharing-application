@@ -2,7 +2,7 @@
 
 ## Table of contents
  - [Description](#description)
- - [Current Workload](#current)
+ - [Current Commit](#current)
  - [Technology](#technology)
  - [Installation](#installation)
  - [Usage](#usage)
@@ -15,6 +15,10 @@ The clients can save some files in their local repository and send repository fo
 The server can save the folder tree of clients and connect them directly when a client require to fetch a file from another one.
 
 ## Current
+Ver 0.2.2:
+  - Fix error remote connection failed
+  - Fix minor errors in formatting
+
 Ver 0.2.1:
   - Optimize performance
   - Update file after fetching to local repository and server
@@ -47,12 +51,11 @@ Choose HOSTNAME = '0.0.0.0' and PORTNAME=8080
 ```bash
 git clone https://github.com/baokhanh1701/p2p-file-sharing-application.git
 cd ./p2p-file-sharing-application
-pip install -r requirements.txt
 python3 serverGUI.py HOSTNAME PORTNAME
 ```
-Open new terminal to run client
+Open new terminal to run client, choose your wifi ipv4 as IP_HOSTNAME
 ```bash
-python3 clientGUI.py SERVER_HOSTNAME SERVER_PORTNAME 
+python3 clientGUI.py IP_HOSTNAME SERVER_PORT 
 ```
 
 ## Usage
@@ -61,7 +64,7 @@ All command for client and server
 ```bash
 publish pathname filename
 fetch filename
-retrieve FTPportname filename
+retrieve FThostname filename
 clear
 ```
 2. Server <br>

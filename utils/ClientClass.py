@@ -103,8 +103,8 @@ class ClientFTPServer:
                             file_data = file.read(4096)
                 clientSocket.close()
                 print("File sent, connection closed")
-            except OSError as err:
-                print(f'OSError: {err}')
+            except Exception as err:
+                print(f'Error message: {err}')
         except Exception as err:
             print(f'{err}')
     def start_server(self):
@@ -159,6 +159,7 @@ class ClientFTPClient:
         # self.serverSocket.close()
     def download_file(self, remote_folder, remote_filename):
         try:
+            print(remote_filename, "in class")
             JSONMessage = convertJSONProtocol(f'retrieve {remote_folder} {remote_filename}')
             print(JSONMessage)
             self.clientSocket.sendall((JSONMessage).encode('utf-8'))

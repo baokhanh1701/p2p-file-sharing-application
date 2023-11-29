@@ -22,21 +22,21 @@ def execute_command(client, command):
     if(command == "clear"):
         text_area.delete(1.0, tk.END)
     # fetch command
-    elif(opString == 'fetch' and len(command.split(' ')) == 2):
+    elif(opString == 'fetch'):
         # check if filename exist in local repository
-        filename = command.split(' ')[1]
+        filename = command.replace(f"{opString} ", "")
         if(filename in localRepository):
             addTextToOutput(text_area, f"{filename} has already existed in your repository")
         else:     
             jsonProtocolCommand = convertJSONProtocol(command)
             client.sendCommand(jsonProtocolCommand)
     #publish command
-    elif(opString == 'publish' and len(command.split(' ')) == 3):
+    elif(opString == 'publish'):
         """
             Check the path and file is valid
         """
         inputPath = command.split(' ')[1]
-        inputFileName = command.split(' ')[2]
+        inputFileName = command.replace(f"{opString} {inputPath} ", "")
         filePathCheck = os.path.join(inputPath,inputFileName)
         if(os.path.exists(filePathCheck)):  
             if (not(inputFileName in localRepository)):
@@ -54,11 +54,11 @@ def execute_command(client, command):
             addTextToOutput(text_area, f"The file '{inputFileName}' does not exist in the directory '{inputPath}'.")
     
     # retrieve command to confirm hostname selection
-    elif(opString == "retrieve" and len(command.split(' ')) == 3):
+    elif(opString == "retrieve"):
         server_name = command.split(' ')[1]
         host_name = server_name.split('/')[0]
         port_name = server_name.split('/')[1]
-        filename = command.split(' ')[2]
+        filename = command.replace(f"{opString} {server_name} ", "")
         
         # Must check whether filename is fetched or not
         if(filename in localRepository):
@@ -68,6 +68,7 @@ def execute_command(client, command):
             start_time = time.time()
             try:
                 peer_client = ClientFTPClient(host_name, int(port_name), ftpPort)
+                print(f"file name out side class: {filename}")
                 downloadMessage = peer_client.download_file(f'{port_name}', filename)
                 end_time = time.time()
                 addTextToOutput(text_area, downloadMessage)
@@ -165,7 +166,7 @@ if __name__ == "__main__":
  
     client.run(text_area)
     # Send ftp port to server for saving on server database
-    current_wifi_ip = get_wifi_ip()
+    current_wifi_ip = client.getHostName()[0]
     initMessage = convertJSONProtocol(f"init {current_wifi_ip} {ftpPort}")
     client.sendCommand(initMessage)
     
